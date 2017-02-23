@@ -40,7 +40,11 @@ sudo perf record --call-graph=dwarf -g -o tarpc-client.perf.data target/release/
 kill -SIGINT $pid
 sleep 1
 
+# benchmark tarpc server/client in same process with same core
+sudo perf record --call-graph=dwarf -g -o tarpc-same.perf.data target/release/same-proc
+
 sudo perf report -g -i memcached-server.perf.data
 sudo perf report -g -i memcached-client.perf.data
 sudo perf report -g -i tarpc-server.perf.data
 sudo perf report -g -i tarpc-client.perf.data
+sudo perf report -g -i tarpc-same.perf.data
