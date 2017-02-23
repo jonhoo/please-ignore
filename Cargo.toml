@@ -1,0 +1,13 @@
+[package]
+name = "tarpc-bench"
+version = "0.1.0"
+authors = ["Jon Gjengset <jon@thesquareplanet.com>"]
+
+[dependencies]
+futures = { version ="0.1.9" }
+tokio-core = { version = "0.1" }
+tarpc = {git="https://github.com/google/tarpc.git"}
+tarpc-plugins = { git = "https://github.com/google/tarpc" }
+serde = { version = "0.9" }
+serde_derive = { version = "0.9" }
+bincode = "1.0.0-alpha2"
