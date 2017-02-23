@@ -13,6 +13,8 @@ extern crate serde;
 
 extern crate bincode;
 
+extern crate memcached;
+
 use std::sync::mpsc;
 use std::sync;
 use std::thread;
@@ -96,6 +98,9 @@ macro_rules! dur_to_ns {
         d.as_secs() * NANOS_PER_SEC + d.subsec_nanos() as u64
     }}
 }
+
+use memcached::Client;
+use memcached::proto::{Operation, MultiOperation, NoReplyOperation, CasOperation, ProtoType};
 
 fn main() {
     use std::time;
@@ -187,5 +192,19 @@ fn main() {
         client.test(arg.clone()).unwrap();
     }
     println!("loopback-no {:.0}µs/call",
+             dur_to_ns!(start.elapsed()) as f64 / n as f64 / 1000.0);
+
+    // memcached
+    let servers = [("tcp://127.0.0.1:2222", 1)];
+    let mut client = Client::connect(&servers, ProtoType::Binary).unwrap();
+    client.set(b"1", b"[1,foobar]", 0xdeadbeef, 2).unwrap();
+
+    let start = time::Instant::now();
+    for _ in 0..n {
+        match client.get(b"1") {
+            _ => (),
+        }
+    }
+    println!("memcached {:.0}µs/call",
              dur_to_ns!(start.elapsed()) as f64 / n as f64 / 1000.0);
 }
