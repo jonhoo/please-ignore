@@ -37,7 +37,7 @@ impl no::FutureService for Preserialized {
 
 fn main() {
     use std::time;
-    let n = 100000;
+    let n = 1000000;
 
     use no::FutureServiceExt;
     let mut reactor = reactor::Core::new().unwrap();
