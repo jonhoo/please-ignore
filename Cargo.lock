@@ -5,6 +5,7 @@ dependencies = [
  "bincode 1.0.0-alpha1 (git+https://github.com/tikue/bincode?branch=faster-byte-buf-deserialization)",
  "futures 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "memcached-rs 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "net2 0.2.26 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 0.9.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 0.9.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "tarpc 0.6.0 (git+https://github.com/google/tarpc.git)",

@@ -8,6 +8,7 @@ futures = "0.1.6"
 tokio-core = "0.1.1"
 tokio-service = "0.1"
 tokio-proto = { git = "https://github.com/tokio-rs/tokio-proto" }
+net2 = "0.2"
 
 tarpc = {git="https://github.com/google/tarpc.git"}
 tarpc-plugins = { git = "https://github.com/google/tarpc" }

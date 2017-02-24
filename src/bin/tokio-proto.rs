@@ -5,17 +5,21 @@ extern crate futures;
 extern crate tokio_core;
 extern crate tokio_proto;
 extern crate tokio_service;
+extern crate net2;
 
 use std::str;
 use std::io::{self, ErrorKind, Write};
 
 use futures::{future, Future, BoxFuture};
 use tokio_core::io::{Io, Codec, Framed, EasyBuf};
-use tokio_proto::TcpServer;
+use tokio_core::net::TcpListener;
 use tokio_proto::pipeline::{ServerProto, ClientProto};
 use tokio_proto::TcpClient;
 use tokio_service::Service;
 use tokio_core::reactor::Core;
+use futures::stream::Stream;
+use tokio_proto::BindServer;
+use std::net::SocketAddr;
 
 // First, we implement a *codec*, which provides a way of encoding and
 // decoding messages for the protocol. See the documentation for `Codec` in
@@ -108,19 +112,34 @@ impl Service for Doubler {
 // Finally, we can actually host this service locally!
 fn main() {
     use std::time;
-    use std::thread;
     let n = 100000;
 
     let addr = "127.0.0.1:12345".parse().unwrap();
 
-    // start server
-    thread::spawn(move || TcpServer::new(IntProto, addr).serve(|| Ok(Doubler)));
+    let mut core = Core::new().unwrap();
+    let handle = core.handle();
 
-    // wait for server
-    thread::sleep(time::Duration::from_secs(1));
+    // start server
+    // thread::spawn(move || TcpServer::new(IntProto, addr).serve(|| Ok(Doubler)));
+    let listener = match addr {
+        SocketAddr::V4(_) => net2::TcpBuilder::new_v4().unwrap(),
+        SocketAddr::V6(_) => net2::TcpBuilder::new_v6().unwrap(),
+    };
+    listener.reuse_address(true).unwrap();
+    listener.bind(addr).unwrap();
+    let server = listener.listen(1024)
+        .and_then(|l| TcpListener::from_listener(l, &addr, &handle))
+        .unwrap()
+        .incoming()
+        .for_each(move |(socket, _)| {
+            IntProto.bind_server(&handle, socket, Doubler);
+            Ok(())
+        })
+        .map_err(|_| ());
+
+    core.handle().spawn(server);
 
     // connect with client
-    let mut core = Core::new().unwrap();
     let handle = core.handle();
     let client = core.run(TcpClient::new(IntProto).connect(&addr, &handle)).unwrap();
 
