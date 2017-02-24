@@ -14,9 +14,6 @@ tarpc = {git="https://github.com/google/tarpc.git"}
 tarpc-plugins = { git = "https://github.com/google/tarpc" }
 #tarpc = { path = "/home/jon/dev/tmp/tarpc-nodelay" }
 #tarpc-plugins = { path = "/home/jon/dev/tmp/tarpc-nodelay/src/plugins" }
-serde = { version = "0.9" }
-serde_derive = { version = "0.9" }
-bincode = { git = "https://github.com/tikue/bincode", branch = "faster-byte-buf-deserialization" }
 memcached-rs = "0.1.2"
 
 [profile.release]
