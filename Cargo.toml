@@ -5,7 +5,9 @@ authors = ["Jon Gjengset <jon@thesquareplanet.com>"]
 
 [dependencies]
 futures = { version ="0.1.9" }
-tokio-core = { version = "0.1" }
+tokio-core = { git = "https://github.com/tokio-rs/tokio-core" }
+tokio-proto = { git = "https://github.com/tokio-rs/tokio-proto" }
+tokio-service = { git = "https://github.com/tokio-rs/tokio-service" }
 tarpc = {git="https://github.com/google/tarpc.git"}
 tarpc-plugins = { git = "https://github.com/google/tarpc" }
 #tarpc = { path = "/home/jon/dev/tmp/tarpc-nodelay" }
