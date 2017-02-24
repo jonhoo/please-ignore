@@ -9,7 +9,6 @@ extern crate tarpc;
 
 extern crate futures;
 extern crate tokio_core;
-extern crate serde;
 
 extern crate bincode;
 
@@ -33,8 +32,7 @@ pub enum DataType {
 }
 
 pub mod no {
-    use super::serde;
     service! {
-        rpc test(i: serde::bytes::ByteBuf) -> serde::bytes::ByteBuf;
+        rpc double(i: i32) -> i32;
     }
 }
