@@ -171,6 +171,6 @@ fn main() {
         core.run(client.call(1)).unwrap();
     }
 
-    println!("proto {:.0}µs/call",
+    println!("tokio-proto {:.0}µs/call",
              dur_to_ns!(start.elapsed()) as f64 / n as f64 / 1000.0);
 }

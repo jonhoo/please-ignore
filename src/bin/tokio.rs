@@ -50,6 +50,6 @@ fn main() {
     drop(r);
     drop(w);
 
-    println!("same {:.0}µs/call",
+    println!("tokio {:.0}µs/call",
              dur_to_ns!(start.elapsed()) as f64 / n as f64 / 1000.0);
 }
