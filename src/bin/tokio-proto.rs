@@ -9,7 +9,7 @@ extern crate tokio_service;
 extern crate net2;
 
 use std::str;
-use std::io::{self, Cursor, ErrorKind, Write};
+use std::io::{self, Cursor};
 
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use futures::{future, Future, BoxFuture};
@@ -32,12 +32,6 @@ use tokio_proto::streaming::multiplex::RequestId;
 #[derive(Default)]
 pub struct IntCodec;
 
-fn parse_u64(from: &[u8]) -> io::Result<u64> {
-    Ok(str::from_utf8(from).map_err(|e| io::Error::new(ErrorKind::InvalidData, e))?
-        .parse()
-        .map_err(|e| io::Error::new(ErrorKind::InvalidData, e))?)
-}
-
 impl Codec for IntCodec {
     type In = (RequestId, u64);
     type Out = (RequestId, u64);
@@ -46,28 +40,12 @@ impl Codec for IntCodec {
     // message is available; returns `Ok(None)` if the buffer does not yet
     // hold a complete message.
     fn decode(&mut self, buf: &mut EasyBuf) -> io::Result<Option<Self::In>> {
-        if let Some(i) = buf.as_slice().iter().position(|&b| b == b'\n') {
-            let mut id_buf = buf.drain_to(mem::size_of::<u64>());
-            let id = Cursor::new(&mut id_buf).read_u64::<BigEndian>()?;
-            println!("id = {}", id);
-
-            println!("\tBefore i = {}", i);
-            println!("\treal i = {}", buf.as_slice().iter().position(|&b| b == b'\n').unwrap());
-            let i = i - mem::size_of::<u64>();
-            println!("\ti = {}", i);
-            // remove the line, including the '\n', from the buffer
-            let full_line = buf.drain_to(i + 1);
-            assert_eq!(full_line.as_slice()[full_line.len() - 1], b'\n');
-
-            // strip the'`\n'
-            let slice = &full_line.as_slice()[..full_line.len() - 1];
-
-            let num = parse_u64(slice)?;
-            println!("num = {}", num);
-            Ok(Some((id, num)))
-        } else {
-            Ok(None)
-        }
+        if buf.len() < 2 * mem::size_of::<u64>() { return Ok(None); }
+        let mut id_buf = buf.drain_to(mem::size_of::<u64>());
+        let id = Cursor::new(&mut id_buf).read_u64::<BigEndian>()?;
+        let mut item_buf = buf.drain_to(mem::size_of::<u64>());
+        let item = Cursor::new(&mut item_buf).read_u64::<BigEndian>()?;
+        Ok(Some((id, item)))
     }
 
     // Attempt to decode a message assuming that the given buffer contains
@@ -75,16 +53,15 @@ impl Codec for IntCodec {
     fn decode_eof(&mut self, buf: &mut EasyBuf) -> io::Result<(RequestId, u64)> {
         let mut id_buf = buf.drain_to(mem::size_of::<u64>());
         let id = Cursor::new(&mut id_buf).read_u64::<BigEndian>()?;
-        println!("id = {}", id);
-        println!("\tbuf len = {}", buf.len());
 
-        let amt = buf.len();
-        Ok((id, parse_u64(buf.drain_to(amt).as_slice())?))
+        let mut item_buf = buf.drain_to(mem::size_of::<u64>());
+        let item = Cursor::new(&mut item_buf).read_u64::<BigEndian>()?;
+        Ok((id, item))
     }
 
     fn encode(&mut self, (id, item): (RequestId, u64), into: &mut Vec<u8>) -> io::Result<()> {
         into.write_u64::<BigEndian>(id).unwrap();
-        writeln!(into, "{}", item).unwrap();
+        into.write_u64::<BigEndian>(item).unwrap();
         Ok(())
     }
 }
