@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate tarpc_bench;
 
-extern crate byteorder;
 extern crate futures;
 extern crate tokio_core;
 extern crate tokio_proto;
@@ -9,21 +8,18 @@ extern crate tokio_service;
 extern crate net2;
 
 use std::str;
-use std::io::{self, Cursor};
+use std::io::{self, ErrorKind, Write};
 
-use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use futures::{future, Future, BoxFuture};
 use tokio_core::io::{Io, Codec, Framed, EasyBuf};
 use tokio_core::net::TcpListener;
-use tokio_proto::multiplex::{ServerProto, ClientProto};
+use tokio_proto::pipeline::{ServerProto, ClientProto};
 use tokio_proto::TcpClient;
 use tokio_service::Service;
 use tokio_core::reactor::Core;
 use futures::stream::Stream;
 use tokio_proto::BindServer;
-use std::mem;
 use std::net::SocketAddr;
-use tokio_proto::streaming::multiplex::RequestId;
 
 // First, we implement a *codec*, which provides a way of encoding and
 // decoding messages for the protocol. See the documentation for `Codec` in
@@ -32,37 +28,42 @@ use tokio_proto::streaming::multiplex::RequestId;
 #[derive(Default)]
 pub struct IntCodec;
 
+fn parse_u64(from: &[u8]) -> Result<u64, io::Error> {
+    Ok(str::from_utf8(from).map_err(|e| io::Error::new(ErrorKind::InvalidData, e))?
+        .parse()
+        .map_err(|e| io::Error::new(ErrorKind::InvalidData, e))?)
+}
+
 impl Codec for IntCodec {
-    type In = (RequestId, u64);
-    type Out = (RequestId, u64);
+    type In = u64;
+    type Out = u64;
 
     // Attempt to decode a message from the given buffer if a complete
     // message is available; returns `Ok(None)` if the buffer does not yet
     // hold a complete message.
-    fn decode(&mut self, buf: &mut EasyBuf) -> io::Result<Option<Self::In>> {
-        if buf.len() < 2 * mem::size_of::<u64>() { return Ok(None); }
-        let mut id_buf = buf.drain_to(mem::size_of::<u64>());
-        let id = Cursor::new(&mut id_buf).read_u64::<BigEndian>()?;
-        let mut item_buf = buf.drain_to(mem::size_of::<u64>());
-        let item = Cursor::new(&mut item_buf).read_u64::<BigEndian>()?;
-        Ok(Some((id, item)))
+    fn decode(&mut self, buf: &mut EasyBuf) -> Result<Option<u64>, io::Error> {
+        if let Some(i) = buf.as_slice().iter().position(|&b| b == b'\n') {
+            // remove the line, including the '\n', from the buffer
+            let full_line = buf.drain_to(i + 1);
+
+            // strip the'`\n'
+            let slice = &full_line.as_slice()[..i];
+
+            Ok(Some(parse_u64(slice)?))
+        } else {
+            Ok(None)
+        }
     }
 
     // Attempt to decode a message assuming that the given buffer contains
     // *all* remaining input data.
-    fn decode_eof(&mut self, buf: &mut EasyBuf) -> io::Result<(RequestId, u64)> {
-        let mut id_buf = buf.drain_to(mem::size_of::<u64>());
-        let id = Cursor::new(&mut id_buf).read_u64::<BigEndian>()?;
-
-        let mut item_buf = buf.drain_to(mem::size_of::<u64>());
-        let item = Cursor::new(&mut item_buf).read_u64::<BigEndian>()?;
-        Ok((id, item))
+    fn decode_eof(&mut self, buf: &mut EasyBuf) -> io::Result<u64> {
+        let amt = buf.len();
+        Ok(parse_u64(buf.drain_to(amt).as_slice())?)
     }
 
-    fn encode(&mut self, (id, item): (RequestId, u64), into: &mut Vec<u8>) -> io::Result<()> {
-        into.write_u64::<BigEndian>(id).unwrap();
-        into.write_u64::<BigEndian>(item).unwrap();
-        Ok(())
+    fn encode(&mut self, item: u64, into: &mut Vec<u8>) -> io::Result<()> {
+        writeln!(into, "{}", item).map(|_| ())
     }
 }
 
@@ -148,6 +149,6 @@ fn main() {
         core.run(client.call(1)).unwrap();
     }
 
-    println!("tokio-proto {:.0}µs/call",
+    println!("tokio-proto-pipeline {:.0}µs/call",
              dur_to_ns!(start.elapsed()) as f64 / n as f64 / 1000.0);
 }
