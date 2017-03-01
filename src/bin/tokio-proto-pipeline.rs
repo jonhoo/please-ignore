@@ -101,11 +101,11 @@ impl Service for Doubler {
     type Request = u64;
     type Response = u64;
     type Error = io::Error;
-    type Future = BoxFuture<u64, io::Error>;
+    type Future = future::FutureResult<u64, io::Error>;
 
     fn call(&self, req: u64) -> Self::Future {
         // Just return the request, doubled
-        future::finished(req * 2).boxed()
+        future::ok(req * 2)
     }
 }
 
