@@ -10,7 +10,7 @@ extern crate net2;
 use std::str;
 use std::io::{self, ErrorKind, Write};
 
-use futures::{future, Future, BoxFuture};
+use futures::{future, Future};
 use tokio_core::io::{Io, Codec, Framed, EasyBuf};
 use tokio_core::net::TcpListener;
 use tokio_proto::pipeline::{ServerProto, ClientProto};

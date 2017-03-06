@@ -8,7 +8,7 @@ use std::io::{self, Read, Write};
 use std::str;
 
 use futures::{Future, Stream, Poll, Async};
-use tokio_core::io::{copy, Io, write_all, read_exact};
+use tokio_core::io::{Io, write_all, read_exact};
 use tokio_core::net::{TcpListener, TcpStream};
 use tokio_core::reactor::Core;
 
@@ -51,7 +51,8 @@ fn main() {
         w = core.run(write_all(w, b"1\n")).unwrap().0;
         r = core.run(read_exact(r, &mut buf)).unwrap().0;
         assert!(buf[1] == b'\n');
-        assert_eq!(str::from_utf8(&buf[..1]).unwrap().parse::<u64>().unwrap(), 2u64);
+        assert_eq!(str::from_utf8(&buf[..1]).unwrap().parse::<u64>().unwrap(),
+                   2u64);
     }
     drop(r);
     drop(w);
@@ -74,7 +75,9 @@ impl Future for MyServer {
         loop {
             while self.output.len() > 0 {
                 match self.socket.write(&self.output) {
-                    Ok(n) => { self.output.drain(..n); }
+                    Ok(n) => {
+                        self.output.drain(..n);
+                    }
                     Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => break,
                     Err(e) => panic!("write error: {}", e),
                 }
@@ -93,8 +96,8 @@ impl Future for MyServer {
             };
 
             let integer: u64 = self.buf[..i].parse().unwrap();
-            self.buf.drain(..i+1);
-            writeln!(self.output, "{}", i * 2);
+            self.buf.drain(..i + 1);
+            writeln!(self.output, "{}", integer * 2).unwrap();
         }
     }
 }
