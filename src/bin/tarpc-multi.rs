@@ -53,6 +53,9 @@ fn main() {
         });
     }
 
+    // wait for server threads to start
+    thread::sleep(time::Duration::from_secs(1));
+
     let start = time::Instant::now();
     let clients: Vec<_> = (0..c)
         .into_iter()
