@@ -2,12 +2,13 @@
 name = "tarpc-bench"
 version = "0.1.0"
 dependencies = [
+ "bincode 1.0.0-alpha2 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "memcached-rs 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "net2 0.2.26 (registry+https://github.com/rust-lang/crates.io-index)",
- "tarpc 0.6.0 (git+https://github.com/google/tarpc)",
- "tarpc-plugins 0.1.0 (git+https://github.com/google/tarpc)",
+ "tarpc 0.6.0 (git+https://github.com/jonhoo/tarpc.git?branch=internals)",
+ "tarpc-plugins 0.1.0 (git+https://github.com/jonhoo/tarpc.git?branch=internals)",
  "tokio-core 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio-proto 0.1.0 (git+https://github.com/tokio-rs/tokio-proto)",
  "tokio-service 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -276,7 +277,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "tarpc"
 version = "0.6.0"
-source = "git+https://github.com/google/tarpc#daa96a69a25908e2941eec337f32446ada93c962"
+source = "git+https://github.com/jonhoo/tarpc.git?branch=internals#364092277e275c2a01f179ed4f277d5932028c4e"
 dependencies = [
  "bincode 1.0.0-alpha2 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -287,7 +288,7 @@ dependencies = [
  "net2 0.2.26 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 0.9.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 0.9.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "tarpc-plugins 0.1.0 (git+https://github.com/google/tarpc)",
+ "tarpc-plugins 0.1.0 (git+https://github.com/jonhoo/tarpc.git?branch=internals)",
  "tokio-core 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio-proto 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio-service 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -296,7 +297,7 @@ dependencies = [
 [[package]]
 name = "tarpc-plugins"
 version = "0.1.0"
-source = "git+https://github.com/google/tarpc#daa96a69a25908e2941eec337f32446ada93c962"
+source = "git+https://github.com/jonhoo/tarpc.git?branch=internals#364092277e275c2a01f179ed4f277d5932028c4e"
 dependencies = [
  "itertools 0.5.9 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -434,8 +435,8 @@ dependencies = [
 "checksum syn 0.11.6 (registry+https://github.com/rust-lang/crates.io-index)" = "0e28da8d02d75d1e58b89258e0741128f0b0d8a8309fb5c627be0fbd37a76c67"
 "checksum synom 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "8fece1853fb872b0acdc3ff88f37c474018e125ef81cd4cb8c0ca515746b62ed"
 "checksum take 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b157868d8ac1f56b64604539990685fa7611d8fa9e5476cf0c02cf34d32917c5"
-"checksum tarpc 0.6.0 (git+https://github.com/google/tarpc)" = "<none>"
-"checksum tarpc-plugins 0.1.0 (git+https://github.com/google/tarpc)" = "<none>"
+"checksum tarpc 0.6.0 (git+https://github.com/jonhoo/tarpc.git?branch=internals)" = "<none>"
+"checksum tarpc-plugins 0.1.0 (git+https://github.com/jonhoo/tarpc.git?branch=internals)" = "<none>"
 "checksum time 0.1.36 (registry+https://github.com/rust-lang/crates.io-index)" = "211b63c112206356ef1ff9b19355f43740fc3f85960c598a93d3a3d3ba7beade"
 "checksum tokio-core 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "3d1be481b55126f02ef88ff86748086473cb537a949fc4a8f4be403a530ae54b"
 "checksum tokio-proto 0.1.0 (git+https://github.com/tokio-rs/tokio-proto)" = "<none>"
