@@ -10,8 +10,7 @@ extern crate tarpc;
 extern crate futures;
 extern crate tokio_core;
 
-use tarpc::client;
-use tarpc::server;
+use tarpc::future::{client, server};
 use tarpc::util::Never;
 use tarpc::util::FirstSocketAddr;
 use tokio_core::reactor;
@@ -38,14 +37,14 @@ fn main() {
 
     use srv::FutureServiceExt;
     let mut reactor = reactor::Core::new().unwrap();
-    let (addr, server) = Srv.listen("127.0.0.1:2223".first_socket_addr(),
+    let (handle, server) = Srv.listen("127.0.0.1:2223".first_socket_addr(),
                 &reactor.handle(),
                 server::Options::default())
         .unwrap();
     reactor.handle().spawn(server);
 
-    use client::future::ClientExt;
-    let client = srv::FutureClient::connect(addr,
+    use client::ClientExt;
+    let client = srv::FutureClient::connect(handle.addr(),
                                             client::Options::default().handle(reactor.handle()));
     let client = reactor.run(client).unwrap();
 

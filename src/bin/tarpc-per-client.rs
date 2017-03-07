@@ -4,16 +4,25 @@
 #[macro_use]
 extern crate tarpc_bench;
 
+extern crate bincode;
+extern crate futures;
 #[macro_use]
 extern crate tarpc;
-
-extern crate futures;
 extern crate tokio_core;
+extern crate tokio_proto;
+extern crate tokio_service;
 
+use futures::Stream;
+use tokio_service::NewService;
+
+
+use std::thread;
 use tarpc::future::{client, server};
 use tarpc::util::Never;
 use tarpc::util::FirstSocketAddr;
 use tokio_core::reactor;
+use std::io;
+use tokio_proto::BindServer;
 
 mod srv {
     service! {
@@ -24,35 +33,38 @@ mod srv {
 #[derive(Clone)]
 struct Srv;
 impl srv::FutureService for Srv {
-    type TestFut = futures::Finished<u64, Never>;
+    type TestFut = Result<u64, Never>;
     fn test(&self, i: u64) -> Self::TestFut {
-        futures::finished(i * 2)
+        Ok(i * 2)
     }
 }
 
-
 fn main() {
-    use std::thread;
     use std::time;
     let n = 100000;
-    let s = 1;
     let c = 3;
+    let addr = "127.0.0.1:7007".first_socket_addr();
 
-    let addr = "127.0.0.1:2223".first_socket_addr();
-    for _ in 0..s {
-        thread::spawn(move || {
-            use srv::FutureServiceExt;
-            let mut reactor = reactor::Core::new().unwrap();
-            let (_, server) = Srv.listen(addr, &reactor.handle(), server::Options::default())
-                .unwrap();
-            reactor.handle().spawn(server);
-            loop {
-                reactor.turn(None);
-            }
+    // start server thread
+    thread::spawn(move || {
+        let mut reactor = reactor::Core::new().unwrap();
+        let listener = server::listener(&addr, &reactor.handle()).unwrap();
+        let server = listener.incoming().for_each(move |(socket, _)| {
+            thread::spawn(move || -> Result<(), io::Error> {
+                use srv::FutureServiceExt;
+                let server = Srv.to_new_service();
+                let mut reactor = reactor::Core::new().unwrap();
+                tarpc::protocol::Proto::new()
+                    .bind_server(&reactor.handle(), socket, server.new_service()?);
+                loop {
+                    reactor.turn(None)
+                }
+            });
+            Ok(())
         });
-    }
+        reactor.run(server).unwrap();
+    });
 
-    // wait for server threads to start
     thread::sleep(time::Duration::from_secs(1));
 
     let start = time::Instant::now();
@@ -78,7 +90,7 @@ fn main() {
         c.join().unwrap();
     }
 
-    println!("tarpc-multi-{} {:.0}µs/call",
+    println!("tarpc-per-client-{} {:.0}µs/call",
              c,
              dur_to_ns!(start.elapsed()) as f64 / n as f64 / 1000.0);
 }

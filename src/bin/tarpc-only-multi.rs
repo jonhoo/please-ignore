@@ -16,11 +16,10 @@ use std::net::TcpStream;
 
 use futures::Future;
 use std::thread;
-use tarpc::client;
+use tarpc::future::{client, server};
 use tarpc::util::Never;
 use tarpc::util::FirstSocketAddr;
 use tokio_core::reactor;
-use tarpc::server::Response;
 use std::io;
 use std::io::Read;
 use std::io::Write;
@@ -47,7 +46,7 @@ impl srv::FutureService for Srv {
 
 fn inner<S, Req, Resp, E>(s: &S, mut stream: TcpStream)
     where S: tarpc::tokio_service::Service<Request = Result<Req, bincode::Error>,
-                                           Response = Response<Resp, E>,
+                                           Response = server::Response<Resp, E>,
                                            Error = io::Error> + 'static,
           Req: Deserialize + 'static,
           Resp: Serialize + 'static,
@@ -111,7 +110,7 @@ fn main() {
         .into_iter()
         .map(|_| {
             thread::spawn(move || {
-                use client::future::ClientExt;
+                use client::ClientExt;
                 let mut reactor = reactor::Core::new().unwrap();
                 let client = srv::FutureClient::connect(addr,
                                                         client::Options::default()

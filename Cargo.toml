@@ -6,14 +6,14 @@ authors = ["Jon Gjengset <jon@thesquareplanet.com>"]
 [dependencies]
 byteorder = "1.0"
 futures = "0.1.6"
-tokio-core = "0.1.1"
+tokio-core = "0.1"
+tokio-proto = "0.1"
 tokio-service = "0.1"
-tokio-proto = { git = "https://github.com/tokio-rs/tokio-proto" }
 net2 = "0.2"
-bincode = "1.0.0-alpha2"
+bincode = "1.0.0-alpha5"
 
-tarpc = {git="https://github.com/jonhoo/tarpc.git", branch="internals"}
-tarpc-plugins = {git = "https://github.com/jonhoo/tarpc", branch="internals"}
+tarpc = {git="https://github.com/jonhoo/tarpc.git", branch="pub"}
+tarpc-plugins = {git = "https://github.com/jonhoo/tarpc", branch="pub"}
 #tarpc = { path = "/home/jon/dev/tmp/tarpc-nodelay" }
 #tarpc-plugins = { path = "/home/jon/dev/tmp/tarpc-nodelay/src/plugins" }
 memcached-rs = "0.1.2"
