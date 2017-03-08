@@ -23,6 +23,7 @@ use tokio_core::reactor;
 use std::io;
 use tarpc::serde::Deserialize;
 use tarpc::serde::Serialize;
+use tarpc::protocol::Codec;
 use tokio_core::io::Io;
 use futures::Stream;
 
@@ -51,29 +52,10 @@ fn inner<S, Req, Resp, E>(s: S, stream: TcpStream)
           E: Serialize + 'static,
           S: tarpc::tokio_service::Service
 {
-    let (mut tcp_out, tcp_in) = stream.framed(tarpc::protocol::Codec::new()).split();
+    let (tcp_out, tcp_in) = stream.framed(Codec::new()).split();
     let mut reactor = reactor::Core::new().unwrap();
-    let (tx, mut rx) = futures::unsync::mpsc::unbounded();
-    let requests = tcp_in.for_each(move |(id, req)| {
-        let tx = tx.clone();
-        s.call(req).then(move |resp| Ok(tx.send((id, resp)).unwrap()))
-    });
-    reactor.handle().spawn(requests.map_err(|_| ()));
-    loop {
-        match reactor.run(rx.into_future()) {
-            Ok((Some((id, res)), rx2)) => {
-                use futures::Sink;
-                rx = rx2;
-                tcp_out = tcp_out.send((id, res.unwrap())).wait().unwrap();
-            }
-            Ok((None, rx2)) => {
-                rx = rx2;
-            }
-            Err((_, rx2)) => {
-                rx = rx2;
-            }
-        }
-    }
+    let responses = tcp_in.and_then(move |(id, req)| s.call(req).map(move |resp| (id, resp)));
+    reactor.run(responses.forward(tcp_out)).unwrap();
 }
 
 fn main() {
